@@ -25,7 +25,7 @@ describe Oystercard do
   describe '#deduct' do
     it 'deducts money from balance when customer travels' do
       subject.top_up($limit)
-      subject.deduct($minimum)
+      subject.touch_out
       expect(subject.balance).to eq $limit - $minimum
     end
   end
@@ -33,17 +33,36 @@ describe Oystercard do
   describe '#touch_in' do
     it 'allows a customer to touch in at the start of the journey when balance above minimum' do
       subject.top_up($limit)
-      expect(subject.touch_in).to eq true
+      expect(subject.touch_in("Victoria")).to eq true
     end
 
     it 'does not allow a customer to touch in when the balance is below the minimum' do
-      expect{subject.touch_in}.to raise_error 'Insufficient funds for journey'
+      expect{subject.touch_in("Victoria")}.to raise_error 'Insufficient funds for journey'
+    end
+
+    it 'remembers the entry station at the start of a journey' do
+      station = double
+      allow(station).to receive(:name) { "Victoria" }
+      subject.top_up($limit)
+      subject.touch_in(station.name)
+      expect(subject.entry_station).to eq station.name
     end
   end
 
   describe '#touch_out' do
     it 'allows a customer to touch out after a journey has ended' do
       expect(subject.touch_out).to eq false
+    end
+
+    it 'deducts the minimum amount from the balance when touched out' do
+      subject.top_up($limit)
+      expect{subject.touch_out}.to change{subject.balance}.by -$minimum
+    end
+
+    it 'forgets entry_station when journey ends' do
+      subject.top_up($limit)
+      subject.touch_in("Victoria")
+      expect{ subject.touch_out }.to change{subject.entry_station}.to nil
     end
   end
 
@@ -54,13 +73,13 @@ describe Oystercard do
 
     it 'returns whether a card is in use after #touch_in' do      
       subject.top_up($minimum)      
-      subject.touch_in
+      subject.touch_in("Victoria")
       expect(subject).to be_in_journey
     end
 
     it 'still works after card #touch_in then #touch_out' do
       subject.top_up($minimum)
-      subject.touch_in
+      subject.touch_in("Victoria")
       subject.touch_out
       expect(subject).not_to be_in_journey
     end

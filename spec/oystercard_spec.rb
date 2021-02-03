@@ -9,28 +9,32 @@ describe Oystercard do
 
   describe '#top_up' do
     it 'increases the balance of Oystercard' do
-      subject.top_up(20)
-      expect(subject.balance).to eq 20
+      subject.top_up(Oystercard::MINIMUM)
+      expect(subject.balance).to eq Oystercard::MINIMUM
     end
 
-    it 'throws an error if customer tries to increase credit above 90' do
-      card = Oystercard.new
-      card.top_up(80)
-      expect{ card.top_up(20) }.to raise_error 'Your credit cannot go over 90'
+    it "throws an error if customer tries to increase credit above #{Oystercard::LIMIT}" do
+      subject.top_up(Oystercard::LIMIT)
+      expect{ subject.top_up(Oystercard::MINIMUM) }.to raise_error "Your credit cannot go over #{Oystercard::LIMIT}"
     end
   end
 
   describe '#deduct' do
     it 'deducts money from balance when customer travels' do
-      subject.top_up(90)
-      subject.deduct(5)
-      expect(subject.balance).to eq 85
+      subject.top_up(Oystercard::LIMIT)
+      subject.deduct(Oystercard::MINIMUM)
+      expect(subject.balance).to eq Oystercard::LIMIT - Oystercard::MINIMUM
     end
   end
 
   describe '#touch_in' do
-    it 'allows a customer to touch in at the start of the journey' do
+    it 'allows a customer to touch in at the start of the journey when balance above minimum' do
+      subject.top_up(Oystercard::LIMIT)
       expect(subject.touch_in).to eq true
+    end
+
+    it 'does not allow a customer to touch in when the balance is below the minimum' do
+      expect{subject.touch_in}.to raise_error 'Insufficient funds for journey'
     end
   end
 
@@ -45,12 +49,14 @@ describe Oystercard do
       expect(subject).not_to be_in_journey
     end
 
-    it 'returns whether a card is in use after #touch_in' do
+    it 'returns whether a card is in use after #touch_in' do      
+      subject.top_up(Oystercard::MINIMUM)      
       subject.touch_in
       expect(subject).to be_in_journey
     end
 
     it 'still works after card #touch_in then #touch_out' do
+      subject.top_up(Oystercard::MINIMUM)
       subject.touch_in
       subject.touch_out
       expect(subject).not_to be_in_journey

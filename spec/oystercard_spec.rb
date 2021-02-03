@@ -27,4 +27,33 @@ describe Oystercard do
       expect(subject.balance).to eq 85
     end
   end
+
+  describe '#touch_in' do
+    it 'allows a customer to touch in at the start of the journey' do
+      expect(subject.touch_in).to eq true
+    end
+  end
+
+  describe '#touch_out' do
+    it 'allows a customer to touch out after a journey has ended' do
+      expect(subject.touch_out).to eq false
+    end
+  end
+
+  describe '#in_journey?' do
+    it 'returns whether card is in use' do
+      expect(subject).not_to be_in_journey
+    end
+
+    it 'returns whether a card is in use after #touch_in' do
+      subject.touch_in
+      expect(subject).to be_in_journey
+    end
+
+    it 'still works after card #touch_in then #touch_out' do
+      subject.touch_in
+      subject.touch_out
+      expect(subject).not_to be_in_journey
+    end
+  end
 end

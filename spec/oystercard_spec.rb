@@ -31,11 +31,6 @@ describe Oystercard do
   end
 
   describe '#touch_in' do
-    it 'allows a customer to touch in at the start of the journey when balance above minimum' do
-      subject.top_up($limit)
-      expect(subject.touch_in("Victoria")).to eq true
-    end
-
     it 'does not allow a customer to touch in when the balance is below the minimum' do
       expect{subject.touch_in("Victoria")}.to raise_error 'Insufficient funds for journey'
     end
@@ -50,10 +45,6 @@ describe Oystercard do
   end
 
   describe '#touch_out' do
-    it 'allows a customer to touch out after a journey has ended' do
-      expect(subject.touch_out).to eq false
-    end
-
     it 'deducts the minimum amount from the balance when touched out' do
       subject.top_up($limit)
       expect{subject.touch_out}.to change{subject.balance}.by -$minimum

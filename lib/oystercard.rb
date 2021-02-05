@@ -1,3 +1,6 @@
+# require 'station'
+# require 'journey'
+
 class Oystercard
   LIMIT = 90
   MINIMUM = 1
